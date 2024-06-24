@@ -23,10 +23,13 @@ dev:
 	RUST_LOG=$(rust_log) cargo watch -x "run -- $(prog) $(ARGS)"
 
 test:
-	cargo test -- --nocapture
+	cargo test -- --test-threads 1
 
 protos:
 	buf generate
+
+migration:
+	sqlx migrate run
 
 all: protos test build
 

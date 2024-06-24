@@ -1,16 +1,16 @@
 // @generated
 /// Generated client implementations.
-pub mod echo_client {
+pub mod echo_service_client {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use tonic::codegen::*;
     use tonic::codegen::http::Uri;
     /** Echo is the echo service.
 */
     #[derive(Debug, Clone)]
-    pub struct EchoClient<T> {
+    pub struct EchoServiceClient<T> {
         inner: tonic::client::Grpc<T>,
     }
-    impl EchoClient<tonic::transport::Channel> {
+    impl EchoServiceClient<tonic::transport::Channel> {
         /// Attempt to create a new client by connecting to a given endpoint.
         pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
         where
@@ -21,7 +21,7 @@ pub mod echo_client {
             Ok(Self::new(conn))
         }
     }
-    impl<T> EchoClient<T>
+    impl<T> EchoServiceClient<T>
     where
         T: tonic::client::GrpcService<tonic::body::BoxBody>,
         T::Error: Into<StdError>,
@@ -39,7 +39,7 @@ pub mod echo_client {
         pub fn with_interceptor<F>(
             inner: T,
             interceptor: F,
-        ) -> EchoClient<InterceptedService<T, F>>
+        ) -> EchoServiceClient<InterceptedService<T, F>>
         where
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
@@ -53,7 +53,7 @@ pub mod echo_client {
                 http::Request<tonic::body::BoxBody>,
             >>::Error: Into<StdError> + Send + Sync,
         {
-            EchoClient::new(InterceptedService::new(inner, interceptor))
+            EchoServiceClient::new(InterceptedService::new(inner, interceptor))
         }
         /// Compress requests with the given encoding.
         ///
@@ -90,8 +90,11 @@ pub mod echo_client {
 */
         pub async fn unary_echo(
             &mut self,
-            request: impl tonic::IntoRequest<super::EchoRequest>,
-        ) -> std::result::Result<tonic::Response<super::EchoResponse>, tonic::Status> {
+            request: impl tonic::IntoRequest<super::UnaryEchoRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::UnaryEchoResponse>,
+            tonic::Status,
+        > {
             self.inner
                 .ready()
                 .await
@@ -103,33 +106,36 @@ pub mod echo_client {
                 })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/grpc.examples.echo.Echo/UnaryEcho",
+                "/echo.v1.EchoService/UnaryEcho",
             );
             let mut req = request.into_request();
             req.extensions_mut()
-                .insert(GrpcMethod::new("grpc.examples.echo.Echo", "UnaryEcho"));
+                .insert(GrpcMethod::new("echo.v1.EchoService", "UnaryEcho"));
             self.inner.unary(req, path, codec).await
         }
     }
 }
 /// Generated server implementations.
-pub mod echo_server {
+pub mod echo_service_server {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use tonic::codegen::*;
-    /// Generated trait containing gRPC methods that should be implemented for use with EchoServer.
+    /// Generated trait containing gRPC methods that should be implemented for use with EchoServiceServer.
     #[async_trait]
-    pub trait Echo: Send + Sync + 'static {
+    pub trait EchoService: Send + Sync + 'static {
         /** UnaryEcho is unary echo.
 */
         async fn unary_echo(
             &self,
-            request: tonic::Request<super::EchoRequest>,
-        ) -> std::result::Result<tonic::Response<super::EchoResponse>, tonic::Status>;
+            request: tonic::Request<super::UnaryEchoRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::UnaryEchoResponse>,
+            tonic::Status,
+        >;
     }
     /** Echo is the echo service.
 */
     #[derive(Debug)]
-    pub struct EchoServer<T: Echo> {
+    pub struct EchoServiceServer<T: EchoService> {
         inner: _Inner<T>,
         accept_compression_encodings: EnabledCompressionEncodings,
         send_compression_encodings: EnabledCompressionEncodings,
@@ -137,7 +143,7 @@ pub mod echo_server {
         max_encoding_message_size: Option<usize>,
     }
     struct _Inner<T>(Arc<T>);
-    impl<T: Echo> EchoServer<T> {
+    impl<T: EchoService> EchoServiceServer<T> {
         pub fn new(inner: T) -> Self {
             Self::from_arc(Arc::new(inner))
         }
@@ -189,9 +195,9 @@ pub mod echo_server {
             self
         }
     }
-    impl<T, B> tonic::codegen::Service<http::Request<B>> for EchoServer<T>
+    impl<T, B> tonic::codegen::Service<http::Request<B>> for EchoServiceServer<T>
     where
-        T: Echo,
+        T: EchoService,
         B: Body + Send + 'static,
         B::Error: Into<StdError> + Send + 'static,
     {
@@ -207,23 +213,25 @@ pub mod echo_server {
         fn call(&mut self, req: http::Request<B>) -> Self::Future {
             let inner = self.inner.clone();
             match req.uri().path() {
-                "/grpc.examples.echo.Echo/UnaryEcho" => {
+                "/echo.v1.EchoService/UnaryEcho" => {
                     #[allow(non_camel_case_types)]
-                    struct UnaryEchoSvc<T: Echo>(pub Arc<T>);
-                    impl<T: Echo> tonic::server::UnaryService<super::EchoRequest>
+                    struct UnaryEchoSvc<T: EchoService>(pub Arc<T>);
+                    impl<
+                        T: EchoService,
+                    > tonic::server::UnaryService<super::UnaryEchoRequest>
                     for UnaryEchoSvc<T> {
-                        type Response = super::EchoResponse;
+                        type Response = super::UnaryEchoResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
                         >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::EchoRequest>,
+                            request: tonic::Request<super::UnaryEchoRequest>,
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move {
-                                <T as Echo>::unary_echo(&inner, request).await
+                                <T as EchoService>::unary_echo(&inner, request).await
                             };
                             Box::pin(fut)
                         }
@@ -266,7 +274,7 @@ pub mod echo_server {
             }
         }
     }
-    impl<T: Echo> Clone for EchoServer<T> {
+    impl<T: EchoService> Clone for EchoServiceServer<T> {
         fn clone(&self) -> Self {
             let inner = self.inner.clone();
             Self {
@@ -278,7 +286,7 @@ pub mod echo_server {
             }
         }
     }
-    impl<T: Echo> Clone for _Inner<T> {
+    impl<T: EchoService> Clone for _Inner<T> {
         fn clone(&self) -> Self {
             Self(Arc::clone(&self.0))
         }
@@ -288,7 +296,7 @@ pub mod echo_server {
             write!(f, "{:?}", self.0)
         }
     }
-    impl<T: Echo> tonic::server::NamedService for EchoServer<T> {
-        const NAME: &'static str = "grpc.examples.echo.Echo";
+    impl<T: EchoService> tonic::server::NamedService for EchoServiceServer<T> {
+        const NAME: &'static str = "echo.v1.EchoService";
     }
 }

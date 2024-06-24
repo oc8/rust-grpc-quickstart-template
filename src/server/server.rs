@@ -1,12 +1,13 @@
+use std::env;
 use std::sync::Arc;
 
 use ::log::{info, warn};
 use tokio::task::JoinHandle;
 use tonic::transport::{Certificate, Identity, Server, ServerTlsConfig};
-use protos::grpc::examples::echo::echo_server::EchoServer;
-use rust_server::{create_socket_addr, env_var, report_error};
-use crate::database::PgPool;
-use crate::services::echo::EchoService;
+use protos::echo::v1::echo_service_server::EchoServiceServer;
+use crate::database::{CacheClient, PgPool};
+use crate::{create_socket_addr, report_error};
+use crate::server::services::v1::echo::echo_service::EchoServiceServerImpl;
 
 pub struct TonicServer {
     pub handle: JoinHandle<()>,
@@ -15,10 +16,10 @@ pub struct TonicServer {
 
 pub fn start_server(
     pool: Arc<PgPool>,
-    r_client: redis::Client,
+    cache_client: CacheClient,
     port: u16,
 ) -> Result<TonicServer, Box<dyn std::error::Error>> {
-    let echo = EchoService { pool,  r_client };
+    let echo = EchoServiceServerImpl::new(pool, cache_client);
 
     let (mut tonic_server, secure_mode) = match get_tls_config() {
         Some(tls) => {
@@ -30,7 +31,7 @@ pub fn start_server(
                 }
                 Err(details) => {
                     info!("Error configuring TLS. Connections are not secure.");
-                    report_error(details);
+                    report_error(&details);
                     (Server::builder(), false)
                 }
             }
@@ -42,13 +43,13 @@ pub fn start_server(
     };
 
     let reflect = tonic_reflection::server::Builder::configure()
-        .register_encoded_file_descriptor_set(protos::grpc::examples::echo::FILE_DESCRIPTOR_SET)
+        .register_encoded_file_descriptor_set(protos::echo::v1::FILE_DESCRIPTOR_SET)
         .build()
         .unwrap();
 
     let tonic_router = tonic_server
         .add_service(reflect)
-        .add_service(EchoServer::new(echo));
+        .add_service(EchoServiceServer::new(echo));
 
     let server = tokio::spawn(async move {
         let tonic_addr = create_socket_addr(port);
@@ -57,7 +58,7 @@ pub fn start_server(
             Ok(_) => info!("Server finished on {}", tonic_addr),
             Err(e) => {
                 warn!("Unable to start server on port {}", port);
-                report_error(e);
+                report_error(&e);
             }
         };
         ()
@@ -70,9 +71,9 @@ pub fn start_server(
 }
 
 fn get_tls_config() -> Option<ServerTlsConfig> {
-    let cert = env_var("TLS_CERT");
-    let key = env_var("TLS_KEY");
-    let ca_cert = env_var("CA_CERT");
+    let cert = env::var("TLS_CERT").ok();
+    let key = env::var("TLS_KEY").ok();
+    let ca_cert = env::var("CA_CERT").ok();
 
     match (cert, key, ca_cert) {
         (Some(cert), Some(key), Some(ca_cert)) => {

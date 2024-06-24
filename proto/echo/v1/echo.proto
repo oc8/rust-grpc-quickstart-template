@@ -18,20 +18,20 @@
 
 syntax = "proto3";
 
-package grpc.examples.echo;
+package echo.v1;
 
 // EchoRequest is the request for echo.
-message EchoRequest {
+message UnaryEchoRequest {
   string message = 1;
 }
 
 // EchoResponse is the response for echo.
-message EchoResponse {
+message UnaryEchoResponse {
   string message = 1;
 }
 
 // Echo is the echo service.
-service Echo {
+service EchoService {
   // UnaryEcho is unary echo.
-  rpc UnaryEcho(EchoRequest) returns (EchoResponse) {}
+  rpc UnaryEcho(UnaryEchoRequest) returns (UnaryEchoResponse) {}
 }
