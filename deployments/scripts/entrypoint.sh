@@ -1,3 +1,3 @@
 sleep 5
-diesel migration run
+sqlx migrate run
 ./rust-server
