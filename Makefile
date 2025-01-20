@@ -28,10 +28,24 @@ test:
 protos:
 	buf generate
 
-migration:
+db_run:
+	docker-compose up -d
+
+db_down:
+	docker-compose down
+
+db_migration:
 	sqlx migrate run
+
+db_new_migration:
+	sqlx migrate add $(name)
+
+db_reset:
+	sqlx database reset
 
 all: protos test build
 
 help:
 	@echo "usage: make $(prog) [debug=1]"
+
+.DEFAULT_GOAL := dev
